@@ -1,9 +1,12 @@
+.DS_Store
+#IntelliJ Idea
+.idea
+*.iml
 # Compiled class file
 *.class
-
 # Log file
 *.log
-
+target
 # BlueJ files
 *.ctxt
 
