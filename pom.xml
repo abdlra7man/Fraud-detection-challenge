@@ -12,7 +12,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <lombok.version>1.16.4</lombok.version>
-        <opencsv.version>2.3</opencsv.version>
+        <univocity.version>2.8.3</univocity.version>
         <guava.version>18.0</guava.version>
     </properties>
 
@@ -24,9 +24,9 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>net.sf.opencsv</groupId>
-            <artifactId>opencsv</artifactId>
-            <version>${opencsv.version}</version>
+            <groupId>com.univocity</groupId>
+            <artifactId>univocity-parsers</artifactId>
+            <version>${univocity.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>

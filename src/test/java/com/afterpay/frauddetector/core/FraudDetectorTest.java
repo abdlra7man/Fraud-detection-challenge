@@ -1,5 +1,6 @@
 package com.afterpay.frauddetector.core;
 
+import com.afterpay.frauddetector.domain.dto.FraudDetectionDTO;
 import com.afterpay.frauddetector.domain.model.CardTransaction;
 import com.afterpay.frauddetector.domain.model.TransactionDetails;
 import com.google.common.collect.Lists;
@@ -13,6 +14,26 @@ import java.util.Map;
 
 public class FraudDetectorTest {
     private static final String FRAUDULANT_CARD = "1234567";
+
+    @Test
+    public void testDetectFraud() {
+        TransactionDetails transactionDetails = TransactionDetails.builder()
+                .date(LocalDateTime.parse("2020-01-01T12:00:00"))
+                .amount(200.0)
+                .build();
+        CardTransaction cardTransaction = CardTransaction.builder()
+        .hashCardNumber("xyz12345abc")
+        .transactionDetails(transactionDetails)
+        .build();
+
+        List<CardTransaction> transactionList = Lists.newArrayList(cardTransaction);
+        FraudDetector fraudDetector = new FraudDetector();
+        FraudDetectionDTO fraudDetectionDTO = FraudDetectionDTO.builder()
+                .transactionList(transactionList)
+                .amountThreshold(100).build();
+        List<String> fraudList = fraudDetector.detectFraud(fraudDetectionDTO);
+        assertEquals("Fraud list should contains 1 item", 1, fraudList.size());
+    }
 
     @Test
     public void testScanForFraudulentTransactions(){
