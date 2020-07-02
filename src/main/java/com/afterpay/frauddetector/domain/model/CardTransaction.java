@@ -1,10 +1,6 @@
 package com.afterpay.frauddetector.domain.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
+import lombok.*;
 
 /**
  * representation of a single credit card transaction
@@ -15,8 +11,8 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class CardTransaction {
 	private String hashCardNumber;
-	private double transactionAmount;
-	private LocalDateTime transactionDate;
+	private TransactionDetails transactionDetails;
 }

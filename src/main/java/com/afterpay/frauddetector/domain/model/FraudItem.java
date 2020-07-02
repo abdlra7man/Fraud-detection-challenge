@@ -1,7 +1,6 @@
 package com.afterpay.frauddetector.domain.model;
 
 import lombok.*;
-
 import java.time.LocalDate;
 
 /**
@@ -14,8 +13,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class FraudItem {
-
 	private String hashCardNumber;
-	private double totalTransactionAmount;
+	private double totalAmount;
 	private LocalDate fraudDate;
 }
