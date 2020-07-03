@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 public class FraudDetectorTest {
-    private static final String FRAUDULANT_CARD = "1234567";
+    private static final String FRAUDULENT_CARD = "1234567";
 
     @Test
     public void testDetectFraud() {
@@ -41,7 +41,7 @@ public class FraudDetectorTest {
         Map<String, List<TransactionDetails>> cardsMap = generateCardsMap();
         List<String> fraudulentCards = fraudDetector.scanForFraudulentTransactions(cardsMap, 45.0);
         assertEquals(1, fraudulentCards.size());
-        assertEquals(FRAUDULANT_CARD, fraudulentCards.get(0));
+        assertEquals(FRAUDULENT_CARD, fraudulentCards.get(0));
     }
     @Test
     public void testGroupBySlidingWidnow(){
@@ -75,7 +75,7 @@ public class FraudDetectorTest {
     private Map<String, List<TransactionDetails>> generateCardsMap() {
         Map<String, List<TransactionDetails>> cardsMap = new HashMap<>();
         List<TransactionDetails> transactionDetails = getTransactionDetails();
-        cardsMap.put(FRAUDULANT_CARD, transactionDetails);
+        cardsMap.put(FRAUDULENT_CARD, transactionDetails);
         cardsMap.put("abcdefgh", Lists.newArrayList(transactionDetails.get(0)));
         cardsMap.put("abcdefgh1234", Lists.newArrayList(transactionDetails.get(1)));
         return cardsMap;

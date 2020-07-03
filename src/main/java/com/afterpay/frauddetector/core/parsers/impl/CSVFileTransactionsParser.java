@@ -1,7 +1,9 @@
 package com.afterpay.frauddetector.core.parsers.impl;
 
+import com.afterpay.frauddetector.core.exception.ValidationException;
 import com.afterpay.frauddetector.core.parsers.TransactionsParser;
 import com.afterpay.frauddetector.domain.model.CardTransaction;
+import com.univocity.parsers.common.DataProcessingException;
 import com.univocity.parsers.common.processor.BeanListProcessor;
 import com.univocity.parsers.common.processor.core.Processor;
 import com.univocity.parsers.csv.CsvFormat;
@@ -11,6 +13,7 @@ import java.io.*;
 import java.util.List;
 
 public class CSVFileTransactionsParser implements TransactionsParser {
+
     @Override
     public List<CardTransaction> parseFromSource(String src) {
         List<CardTransaction> transactions;
@@ -20,9 +23,11 @@ public class CSVFileTransactionsParser implements TransactionsParser {
             parser.parse(csvFile);
             transactions = rowProcessor.getBeans();
         } catch (FileNotFoundException e) {
-            throw new RuntimeException("File not found");
+            throw new ValidationException("File not found");
         } catch (IOException e) {
-            throw new RuntimeException(e.getMessage());
+            throw new ValidationException(e.getMessage());
+        } catch (DataProcessingException dpe){
+            throw new ValidationException("Incorrect file format, please verify data is formatted correctly");
         }
         return transactions;
     }
