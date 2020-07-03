@@ -9,11 +9,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- * 
- * @author Abdelrahman
- *
- */
 public class FraudDetector {
 
 	public List<String> detectFraud(FraudDetectionDTO fraudDetectionDTO) {
