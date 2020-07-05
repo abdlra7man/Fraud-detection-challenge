@@ -11,7 +11,7 @@ A credit card will be identified as fraudulent if the sum of amounts for a uniqu
 card number over a 24-hour sliding window period exceeds the price threshold.
 ### Prerequisites
 
-Java 1.8
+Java 1.8 (I have not run it with higher versions, but I assume it should work)
 
 Maven
 
@@ -38,7 +38,8 @@ a file containing a list of transaction ( see transactions_sample file under src
 for example :
 open a command console into the cardFraudDetector folder and run the following
 ```
-java -jar ./target/fraud-detector-0.1.0.jar 150.00 src/test/resources/transactions_sample.csv
+java -jar ./target/fraud-detector-0.1.0.jar 60.00 src/test/resources/transactions_sample.csv
+java -jar ./target/fraud-detector-0.1.0.jar 60.00 src/test/resources/transactions_sample2.csv
 ```
 
 main class is Main.java

@@ -9,10 +9,14 @@ import com.univocity.parsers.common.processor.core.Processor;
 import com.univocity.parsers.csv.CsvFormat;
 import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;
-import java.io.*;
+
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.List;
 
 public class CSVFileTransactionsParser implements TransactionsParser {
+    private static final String[] HEADERS = {"CardNumber", "Date", "Value"};
 
     @Override
     public List<CardTransaction> parseFromSource(String src) {
@@ -31,14 +35,14 @@ public class CSVFileTransactionsParser implements TransactionsParser {
         }
         return transactions;
     }
-    private CsvParser getCsvParser(Processor processor) {
+    CsvParser getCsvParser(Processor processor) {
         CsvParserSettings settings = new CsvParserSettings();
         settings.setMaxCharsPerColumn(-1);
         CsvFormat format = new CsvFormat();
         settings.setProcessor(processor);
         format.setDelimiter(',');
         settings.setNumberOfRowsToSkip(0);
-        settings.setHeaders("CardNumber", "Date", "Value");
+        settings.setHeaders(HEADERS);
         settings.setFormat(format);
         return new CsvParser(settings);
     }

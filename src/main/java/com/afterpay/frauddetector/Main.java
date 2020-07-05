@@ -1,12 +1,15 @@
 package com.afterpay.frauddetector;
 
-import com.afterpay.frauddetector.core.FraudDetector;
+import com.afterpay.frauddetector.core.FraudDetectionContext;
+import com.afterpay.frauddetector.core.FraudDetectionStrategy;
+import com.afterpay.frauddetector.core.detectors.SlidingWindowScannerFraudDetector;
 import com.afterpay.frauddetector.core.exception.ValidationException;
 import com.afterpay.frauddetector.core.parsers.ParserType;
 import com.afterpay.frauddetector.core.parsers.TransactionsParser;
 import com.afterpay.frauddetector.core.parsers.TransactionsParserFactory;
 import com.afterpay.frauddetector.domain.dto.FraudDetectionDTO;
 import com.afterpay.frauddetector.domain.model.CardTransaction;
+
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
@@ -19,7 +22,7 @@ public class Main {
         displayOutput(fraudulentCards);
     }
 
-    private static List<String> getFraudulentCardsList(String[] args) {
+    static List<String> getFraudulentCardsList(String[] args) {
         List<String> fraudulentCards = new ArrayList<>();
         try{
             validateParams(args[0], args[1]);
@@ -32,27 +35,29 @@ public class Main {
     }
 
     static List<String> processInput(String thresholdAmount, String fileName) {
-        TransactionsParser parser = TransactionsParserFactory.getFileTransactionsParser(ParserType.FILE_PARSER);
+        TransactionsParser parser = TransactionsParserFactory.getTransactionsParser(ParserType.FILE_PARSER);
         List<CardTransaction> allTransactions = parser.parseFromSource(fileName);
         FraudDetectionDTO fraudDetectionDTO = FraudDetectionDTO.builder()
                 .amountThreshold(Double.parseDouble(thresholdAmount))
                 .transactionList(allTransactions)
                 .build();
-        return new FraudDetector().detectFraud(fraudDetectionDTO);
+        FraudDetectionStrategy fraudDetectionStrategy = new SlidingWindowScannerFraudDetector();
+        FraudDetectionContext context = new FraudDetectionContext(fraudDetectionStrategy);
+        return context.executeFraudDetection(fraudDetectionDTO);
     }
 
-    private static void displayOutput(List<String> fraudulentCards) {
-        if(fraudulentCards.size() > 0){
+    static void displayOutput(List<String> fraudulentCards) {
+        if(null != fraudulentCards && fraudulentCards.size() > 0){
             System.out.println("DETECTED FRAUDULENT CARDS :");
             fraudulentCards.forEach(System.out::println);
         } else {
-            System.out.println("NO DETECTED FRAUDULENT CARDS ");
+            System.out.println("NO DETECTED FRAUDULENT CARDS");
         }
     }
 
     private static void validateNumberOfArgs(String[] args) {
-        if (args.length != 2) {
-            System.err.println("Invalid number of arguments. usage java -jar fraud-detector-0.1.0.jar threshold filename.csv ");
+        if (null == args || args.length != 2) {
+            System.err.println("Invalid number of arguments. usage java -jar fraud-detector-0.1.0.jar threshold filename.csv");
             System.exit(1);
         }
     }

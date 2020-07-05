@@ -1,53 +1,94 @@
-package com.afterpay.frauddetector.core;
+package com.afterpay.frauddetector.core.detectors;
 
+import com.afterpay.frauddetector.core.exception.ValidationException;
 import com.afterpay.frauddetector.domain.dto.FraudDetectionDTO;
 import com.afterpay.frauddetector.domain.model.CardTransaction;
 import com.afterpay.frauddetector.domain.model.TransactionDetails;
 import com.google.common.collect.Lists;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.rules.ExpectedException;
+import org.mockito.Mockito;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class FraudDetectorTest {
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.*;
+
+
+public class SlidingWindowScannerFraudDetectorTest {
     private static final String FRAUDULENT_CARD = "1234567";
+    private List<TransactionDetails> transactionDetails;
+    private Map<String, List<TransactionDetails>> cardsMap;
+    private List<CardTransaction> cardTransactions;
+    private List<List<TransactionDetails>> transactions;
+    private SlidingWindowScannerFraudDetector slidingWindowScannerFraudDetector;
+
+    @Rule
+    public ExpectedException exceptionRule = ExpectedException.none();
+
+    @Before
+    public void setup(){
+        cardTransactions = generateCardTransactionsList();
+        transactionDetails = getTransactionDetails();
+        cardsMap = generateCardsMap();
+        transactions = getSlidingWindowsTransactionDetails();
+        slidingWindowScannerFraudDetector = Mockito.spy(new SlidingWindowScannerFraudDetector());
+    }
 
     @Test
     public void testDetectFraud() {
-        TransactionDetails transactionDetails = TransactionDetails.builder()
-                .date(LocalDateTime.parse("2020-01-01T12:00:00"))
-                .amount(200.0)
-                .build();
-        CardTransaction cardTransaction = CardTransaction.builder()
-        .hashCardNumber("xyz12345abc")
-        .transactionDetails(transactionDetails)
-        .build();
-
-        List<CardTransaction> transactionList = Lists.newArrayList(cardTransaction);
-        FraudDetector fraudDetector = new FraudDetector();
         FraudDetectionDTO fraudDetectionDTO = FraudDetectionDTO.builder()
-                .transactionList(transactionList)
-                .amountThreshold(100).build();
-        List<String> fraudList = fraudDetector.detectFraud(fraudDetectionDTO);
-        assertEquals("Fraud list should contains 1 item", 1, fraudList.size());
+                .transactionList(cardTransactions)
+                .amountThreshold(25.0).build();
+        List<String> fraudList = slidingWindowScannerFraudDetector.detectFraud(fraudDetectionDTO);
+
+        verify(slidingWindowScannerFraudDetector).buildCardTransactionsMap(cardTransactions);
+        verify(slidingWindowScannerFraudDetector).scanForFraudulentTransactions(anyMap(), eq(25.0));
+        assertEquals( 1, fraudList.size());
+        assertEquals("12345678abcdef", fraudList.get(0));
+    }
+
+    @Test
+    public void testDetectFraudWithInvalidThresholdValue(){
+        exceptionRule.expect(ValidationException.class);
+        exceptionRule.expectMessage("Threshold must be greater than 0");
+        FraudDetectionDTO fraudDetectionDTO = FraudDetectionDTO.builder()
+                .transactionList(cardTransactions)
+                .amountThreshold(0).build();
+        slidingWindowScannerFraudDetector.detectFraud(fraudDetectionDTO);
+    }
+
+    @Test
+    public void testDetectFraudWithNoTransactions(){
+        exceptionRule.expect(ValidationException.class);
+        exceptionRule.expectMessage("No Transactions to validate against");
+        FraudDetectionDTO fraudDetectionDTO = FraudDetectionDTO.builder()
+                .transactionList(null)
+                .amountThreshold(50).build();
+        slidingWindowScannerFraudDetector.detectFraud(fraudDetectionDTO);
+    }
+
+    @Test
+    public void testDetectFraudWithNullDTO(){
+        exceptionRule.expect(ValidationException.class);
+        exceptionRule.expectMessage("FraudDetectionDTO can not be null");
+        slidingWindowScannerFraudDetector.detectFraud(null);
     }
 
     @Test
     public void testScanForFraudulentTransactions(){
-        FraudDetector fraudDetector = new FraudDetector();
-        Map<String, List<TransactionDetails>> cardsMap = generateCardsMap();
-        List<String> fraudulentCards = fraudDetector.scanForFraudulentTransactions(cardsMap, 45.0);
+        List<String> fraudulentCards = slidingWindowScannerFraudDetector.scanForFraudulentTransactions(cardsMap, 45.0);
         assertEquals(1, fraudulentCards.size());
         assertEquals(FRAUDULENT_CARD, fraudulentCards.get(0));
     }
     @Test
     public void testGroupBySlidingWidnow(){
-        FraudDetector fraudDetector = new FraudDetector();
-        List<TransactionDetails> transactions = getTransactionDetails();
-        List<List<TransactionDetails>> collectedTrans = fraudDetector.groupBySlidingWidnow(transactions);
+        List<List<TransactionDetails>> collectedTrans = slidingWindowScannerFraudDetector.groupBySlidingWidnow(transactionDetails);
         assertEquals(2, collectedTrans.size());
         assertEquals(3, collectedTrans.get(0).size());
         assertEquals(3, collectedTrans.get(1).size());
@@ -55,18 +96,14 @@ public class FraudDetectorTest {
 
     @Test
     public void testReduceToSlidingWindowTotals () {
-        FraudDetector fraudDetector = new FraudDetector();
-        List<List<TransactionDetails>> transactions = getSlidingWindowsTransactionDetails();
-        List<Double> totals = fraudDetector.reduceToSlidingWindowTotals(transactions);
+        List<Double> totals = slidingWindowScannerFraudDetector.reduceToSlidingWindowTotals(transactions);
         assertEquals(45.0, totals.get(0).doubleValue(), 0.1);
         assertEquals(46.0, totals.get(1).doubleValue(), 0.1);
     }
 
     @Test
     public void testBuildCardTransactionsMap (){
-        FraudDetector fraudDetector = new FraudDetector();
-        List<CardTransaction> cardTransactions = generateCardTransactionsList();
-        Map<String, List<TransactionDetails>> cardTransactionsMap = fraudDetector.buildCardTransactionsMap(cardTransactions);
+        Map<String, List<TransactionDetails>> cardTransactionsMap = slidingWindowScannerFraudDetector.buildCardTransactionsMap(cardTransactions);
         assertEquals(3, cardTransactionsMap.keySet().size());
         assertEquals(2, cardTransactionsMap.get("12345678abcdef").size());
     }

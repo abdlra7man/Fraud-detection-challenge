@@ -1,5 +1,7 @@
-package com.afterpay.frauddetector.core;
+package com.afterpay.frauddetector.core.detectors;
 
+import com.afterpay.frauddetector.core.FraudDetectionStrategy;
+import com.afterpay.frauddetector.core.exception.ValidationException;
 import com.afterpay.frauddetector.domain.dto.FraudDetectionDTO;
 import com.afterpay.frauddetector.domain.model.CardTransaction;
 import com.afterpay.frauddetector.domain.model.TransactionDetails;
@@ -9,12 +11,24 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class FraudDetector {
+public class SlidingWindowScannerFraudDetector implements FraudDetectionStrategy {
 
+	@Override
 	public List<String> detectFraud(FraudDetectionDTO fraudDetectionDTO) {
+		validateFraudDetectionDTO(fraudDetectionDTO);
 		Map<String, List<TransactionDetails>> cardsMap =  buildCardTransactionsMap(fraudDetectionDTO.getTransactionList());
 		List<String> fraudList = scanForFraudulentTransactions(cardsMap, fraudDetectionDTO.getAmountThreshold());
 		return fraudList;
+	}
+
+	private void validateFraudDetectionDTO(FraudDetectionDTO fraudDetectionDTO) {
+		if(null == fraudDetectionDTO){
+			throw new ValidationException("FraudDetectionDTO can not be null");
+		} else if(null == fraudDetectionDTO.getTransactionList() || 0 == fraudDetectionDTO.getTransactionList().size()){
+			throw new ValidationException("No Transactions to validate against");
+		} else if(0 >= fraudDetectionDTO.getAmountThreshold()){
+			throw new ValidationException("Threshold must be greater than 0");
+		}
 	}
 
 	List<String> scanForFraudulentTransactions(Map<String, List<TransactionDetails>> cardsMap, double amountThreshold) {
