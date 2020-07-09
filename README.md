@@ -1,4 +1,4 @@
-# Afterpay - Fraud Detector
+#  Fraud Detector
 The repository contains the solution for the programming assignment of detecting Card Transactions Fraud
 The application accepts a comma separated file that contains list of transactions.
 A credit card transaction comprises the following elements.
